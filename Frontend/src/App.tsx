@@ -4,6 +4,7 @@ import Footer from './components/Footer'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import VerifyEmail from './pages/VerifyEmail'
 import DashboardLayout from './components/dashboard/DashboardLayout'
 import StudentHome from './pages/student/StudentHome'
 import StudentJobs from './pages/student/StudentJobs'
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
           <Route path="/student" element={<DashboardLayout title="Student" links={studentLinks} />}>
             <Route index element={<StudentHome />} />
@@ -56,6 +58,7 @@ export default function App() {
             <Route path="applicants" element={<RecruiterApplicants />} />
             <Route path="schedule" element={<RecruiterSchedule />} />
           </Route>
+          <Route path="*" element={<div className="container" style={{ paddingTop: 40 }}><h2>Page not found</h2><p>The page you requested does not exist.</p></div>} />
         </Routes>
       </main>
       <Footer />

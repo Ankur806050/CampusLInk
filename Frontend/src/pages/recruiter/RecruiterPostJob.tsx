@@ -1,46 +1,7 @@
 import { useState } from 'react'
-import MockBanner from '../../components/dashboard/MockBanner'
-import { mockCompanyStatus } from '../../mock/recruiterData'
-
+import { api } from '../../lib/api'
 export default function RecruiterPostJob() {
-  const [done, setDone] = useState(false)
-  const blocked = mockCompanyStatus !== 'approved'
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setDone(true)
-  }
-
-  return (
-    <>
-      <MockBanner />
-      <h2>Post a Job</h2>
-      {blocked && <p className="error">Your company must be approved by the TPO before posting jobs.</p>}
-      <div className="card" style={{ maxWidth: 640 }}>
-        <form className="form" onSubmit={handleSubmit}>
-          <fieldset disabled={blocked} style={{ border: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <label>Job title<input required /></label>
-            <label>Type
-              <select><option>Full-time</option><option>Internship</option></select>
-            </label>
-            <label>CTC / Stipend amount<input placeholder="e.g. 8" required /></label>
-            <label>Pay unit
-              <select><option>LPA (per year)</option><option>Per month</option></select>
-            </label>
-            <label>Location<input required /></label>
-            <label>Description<textarea rows={4} style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 8 }} /></label>
-            <label>Required skills (comma separated)<input /></label>
-            <label>Preferred skills (comma separated)<input /></label>
-            <label>Application deadline<input type="date" required /></label>
-            <label>Eligible branches (comma separated)<input placeholder="CSE, IT" /></label>
-            <label>Minimum CGPA<input type="number" step="0.1" min="0" max="10" /></label>
-            <label>Graduation year<input type="number" /></label>
-            <label>Max active backlogs allowed<input type="number" min="0" defaultValue={0} /></label>
-            <button className="btn btn-primary" type="submit">Submit for TPO approval</button>
-          </fieldset>
-        </form>
-        {done && <p style={{ color: '#16a34a', marginTop: 12 }}>Submitted (mock only). Nothing was sent to the backend.</p>}
-      </div>
-    </>
-  )
+ const [error,setError]=useState('');const [message,setMessage]=useState('');const [busy,setBusy]=useState(false)
+ async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();const form=e.currentTarget;setError('');setMessage('');setBusy(true);const f=new FormData(form);const split=(v:FormDataEntryValue|null)=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);const body:any={title:String(f.get('title')),jobType:f.get('jobType'),compensation:String(f.get('compensation')),location:String(f.get('location')),workMode:f.get('workMode'),description:String(f.get('description')),requiredSkills:split(f.get('requiredSkills')),eligibleBranches:split(f.get('eligibleBranches')),applicationDeadline:new Date(String(f.get('applicationDeadline'))+'T23:59:00').toISOString()};if(String(f.get('minimumCgpa'))!=='')body.minimumCgpa=Number(f.get('minimumCgpa'));if(String(f.get('graduationYear'))!=='')body.eligibleGraduationYears=[Number(f.get('graduationYear'))];try{const r=await api<any>('/recruiter/jobs',{method:'POST',body:JSON.stringify(body)});setMessage(r.message||'Job submitted for TPO approval.');form.reset()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ return <><h2>Post a Job</h2><p style={{fontSize:13,color:'var(--muted)'}}>Jobs are submitted for TPO approval before appearing to students. Your company must be approved first.</p><div className="card" style={{maxWidth:640}}><form className="form" onSubmit={submit}><label>Job title<input name="title" minLength={3} required /></label><label>Type<select name="jobType"><option value="INTERNSHIP">Internship</option><option value="FULL_TIME">Full-time</option></select></label><label>Compensation<input name="compensation" placeholder="e.g. ₹30,000/month or 8 LPA" required /></label><label>Location<input name="location" required /></label><label>Work mode<select name="workMode"><option value="ONSITE">Onsite</option><option value="HYBRID">Hybrid</option><option value="REMOTE">Remote</option></select></label><label>Description<textarea name="description" rows={5} minLength={30} required /></label><label>Required skills (comma separated)<input name="requiredSkills" /></label><label>Eligible branches (comma separated, blank for all)<input name="eligibleBranches" placeholder="CSE, IT" /></label><label>Minimum CGPA<input name="minimumCgpa" type="number" step="0.1" min="0" max="10" /></label><label>Eligible graduation year<input name="graduationYear" type="number" min="2020" max="2100" /></label><label>Application deadline<input name="applicationDeadline" type="date" min={new Date().toISOString().slice(0,10)} required /></label>{error&&<div className="error">{error}</div>}{message&&<p>{message}</p>}<button className="btn btn-primary" disabled={busy}>{busy?'Submitting…':'Submit for TPO approval'}</button></form></div></>
 }

@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom'
 const steps = [
   { t: '1. Register', d: 'Students and companies create accounts. Companies wait for TPO approval.' },
   { t: '2. Post & Apply', d: 'Approved recruiters post jobs. Eligible students discover and apply.' },
-  { t: '3. Review & Schedule', d: 'Recruiters shortlist with AI-assisted insights; TPO approves schedules.' },
+  { t: '3. Review & Schedule', d: 'Recruiters review applications and propose OA/interview slots; the TPO reviews approvals.' },
 ]
 
 const roles = [
-  { t: 'Student', d: 'Build your profile, upload your resume, get job recommendations and track applications.' },
-  { t: 'Recruiter', d: 'Post openings, review applicants with matching scores, and propose OA/interview slots.' },
-  { t: 'TPO', d: 'Approve companies, monitor drives, and view placement analytics in one place.' },
+  { t: 'Student', d: 'Build your profile, upload your resume, browse eligible openings and track applications.' },
+  { t: 'Recruiter', d: 'Submit company details for approval, post openings, review applicants and propose OA/interview slots.' },
+  { t: 'TPO', d: 'Review company requests, approve job postings and review interview schedule proposals.' },
 ]
 
 export default function Landing() {
