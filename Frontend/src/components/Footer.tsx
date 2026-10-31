@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <strong style={{ color: '#fff' }}>CampusLink</strong>
-          <div>AI-powered campus placement platform</div>
+          <div>Campus placement platform</div>
         </div>
         <div>
           <div>Help: tpo@college.edu (placeholder)</div>

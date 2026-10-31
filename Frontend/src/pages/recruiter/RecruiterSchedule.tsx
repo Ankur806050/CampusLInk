@@ -1,54 +1,8 @@
-import { useState } from 'react'
-import MockBanner from '../../components/dashboard/MockBanner'
-
-interface Proposal { id: number; kind: string; date: string; time: string; notes: string }
-
+import { useEffect,useState } from 'react'
+import { api } from '../../lib/api'
 export default function RecruiterSchedule() {
-  const [proposals, setProposals] = useState<Proposal[]>([])
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const form = e.currentTarget
-    const f = new FormData(form)
-    setProposals(prev => [...prev, {
-      id: Date.now(),
-      kind: String(f.get('kind')),
-      date: String(f.get('date')),
-      time: String(f.get('time')),
-      notes: String(f.get('notes')),
-    }])
-    form.reset()
-  }
-
-  return (
-    <>
-      <MockBanner />
-      <h2>Propose OA / Interview Schedule</h2>
-      <div className="card" style={{ maxWidth: 520 }}>
-        <form className="form" onSubmit={handleSubmit}>
-          <label>Type
-            <select name="kind"><option>Online Assessment</option><option>Interview</option></select>
-          </label>
-          <label>Date<input name="date" type="date" required /></label>
-          <label>Time<input name="time" type="time" required /></label>
-          <label>Notes<input name="notes" placeholder="Platform link, instructions" /></label>
-          <button className="btn btn-primary" type="submit">Send proposal to TPO</button>
-        </form>
-      </div>
-
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>My proposals</h3>
-        {proposals.length === 0 ? <p>No proposals yet.</p> : (
-          <table>
-            <thead><tr><th>Type</th><th>Date</th><th>Time</th><th>TPO status</th></tr></thead>
-            <tbody>
-              {proposals.map(p => (
-                <tr key={p.id}><td>{p.kind}</td><td>{p.date}</td><td>{p.time}</td><td>Pending TPO approval (mock)</td></tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </>
-  )
+ const [applications,setApplications]=useState<any[]>([]);const [schedules,setSchedules]=useState<any[]>([]);const [error,setError]=useState('');const [message,setMessage]=useState('');const [busy,setBusy]=useState(false)
+ useEffect(()=>{async function load(){try{const jobs=(await api<any>('/recruiter/jobs')).data||[];const results=await Promise.all(jobs.map((j:any)=>api<any>(`/recruiter/jobs/${j.id}/applicants`).then(r=>r.data||[]).catch(()=>[])));setApplications(results.flat().filter((application:any)=>['SHORTLISTED','OA_SCHEDULED','INTERVIEW_SCHEDULED'].includes(application.status)));const s=await api<any>('/recruiter/schedules');setSchedules(s.schedules||[])}catch(e){setError((e as Error).message)}}load()},[])
+ async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();setError('');setMessage('');setBusy(true);const f=new FormData(e.currentTarget);const body={applicationId:String(f.get('applicationId')),roundType:f.get('roundType'),title:String(f.get('title')),description:String(f.get('description')||''),scheduledAt:new Date(String(f.get('scheduledAt'))).toISOString(),durationMinutes:Number(f.get('durationMinutes')),mode:f.get('mode'),locationOrLink:String(f.get('locationOrLink')||'')};try{const r=await api<any>('/recruiter/schedules',{method:'POST',body:JSON.stringify(body)});setMessage(r.message||'Interview proposal submitted.');const s=await api<any>('/recruiter/schedules');setSchedules(s.schedules||[])}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ return <><h2>Propose OA / Interview Schedule</h2>{error&&<div className="error">{error}</div>}<div className="card" style={{maxWidth:600}}><form className="form" onSubmit={submit}><label>Applicant<select name="applicationId" required defaultValue=""><option value="" disabled>Select applicant</option>{applications.map(a=><option key={a.id} value={a.id}>{a.student?.name||a.student?.email} — {a.job?.title}</option>)}</select></label><label>Round type<select name="roundType"><option value="ONLINE_ASSESSMENT">Online assessment</option><option value="TECHNICAL_INTERVIEW">Technical interview</option><option value="HR_INTERVIEW">HR interview</option><option value="OTHER">Other</option></select></label><label>Title<input name="title" required minLength={2}/></label><label>Description<textarea name="description" rows={3}/></label><label>Date and time<input name="scheduledAt" type="datetime-local" min={new Date().toISOString().slice(0,16)} required/></label><label>Duration (minutes)<input name="durationMinutes" type="number" min="15" max="480" defaultValue="60" required/></label><label>Mode<select name="mode"><option value="ONLINE">Online</option><option value="IN_PERSON">In person</option></select></label><label>Meeting link / location<input name="locationOrLink"/></label>{message&&<p>{message}</p>}<button className="btn btn-primary" disabled={busy||!applications.length}>{busy?'Submitting…':'Send proposal to TPO'}</button>{!applications.length&&<p>No applicants are available yet. Applications will appear here when students apply.</p>}</form></div><div className="card" style={{marginTop:16}}><h3>My proposals</h3>{schedules.length?<table><thead><tr><th>Title</th><th>Applicant</th><th>Date</th><th>Status</th></tr></thead><tbody>{schedules.map(s=><tr key={s.id}><td>{s.title}</td><td>{s.studentName||'—'}</td><td>{s.scheduledAt?new Date(s.scheduledAt).toLocaleString():'—'}</td><td>{s.status}</td></tr>)}</tbody></table>:<p>No proposals yet.</p>}</div></>
 }
